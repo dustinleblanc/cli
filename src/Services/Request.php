@@ -1,6 +1,6 @@
 <?php
 
-namespace Pantheon\Terminus;
+namespace Pantheon\Terminus\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;

@@ -2,7 +2,7 @@
 
 namespace Pantheon\Terminus\Services;
 
-use Pantheon\Terminus\Caches\FileCache;
+use Pantheon\Terminus\Services\Caches\FileCache;
 use Pantheon\Terminus\Models\User;
 
 class Session

@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Pantheon\Terminus\Models\Auth;
-use Pantheon\Terminus\Request;
+use Pantheon\Terminus\Services\Request;
 
 /**
  * Class Login
@@ -21,7 +21,7 @@ use Pantheon\Terminus\Request;
  */
 class Login extends TerminusCommand
 {
-    
+
     /**
      * @inheritdoc
      */

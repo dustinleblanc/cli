@@ -4,7 +4,7 @@
  * @file Contains Terminus\Exceptions\TerminusException
  */
 
-namespace Terminus\Exceptions;
+namespace Pantheon\Terminus\Exceptions;
 
 /**
  * Class TerminusException
