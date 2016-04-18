@@ -4,6 +4,7 @@ namespace Pantheon\Terminus\Models;
 
 use League\Container\ContainerAwareInterface;
 use League\Container\ContainerAwareTrait;
+use Pantheon\Terminus\Config\Config;
 use Pantheon\Terminus\Configurator;
 use Pantheon\Terminus\Exceptions\TerminusException;
 use Pantheon\Terminus\Request;
@@ -11,7 +12,7 @@ use Pantheon\Terminus\Request;
 abstract class TerminusModel implements ContainerAwareInterface
 {
     use ContainerAwareTrait;
-    
+
     protected $id;
     /**
      * @var Request
@@ -30,6 +31,7 @@ abstract class TerminusModel implements ContainerAwareInterface
      */
     public function __construct($attributes = null, array $options = array())
     {
+        $this->container = Config::getContainer();
         if (!defined('Terminus')) {
             $configurator = new Configurator();
         }
@@ -43,7 +45,7 @@ abstract class TerminusModel implements ContainerAwareInterface
             $this->$var_name = $value;
         }
         $this->attributes = $attributes;
-        $this->request = new Request();
+        $this->request = $this->getContainer()->get('Request');
     }
 
     /**
