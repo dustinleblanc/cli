@@ -3,7 +3,7 @@
 namespace Pantheon\Terminus\Models;
 
 use Terminus\Models\Collections\UserOrganizationMemberships;
-use Panthepn\Terminus\Models\TerminusModel;
+use Pantheon\Terminus\Models\TerminusModel;
 use Terminus\Models\Collections\Instruments;
 use Terminus\Models\Collections\MachineTokens;
 use Terminus\Models\Collections\SshKeys;
