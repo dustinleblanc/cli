@@ -5,8 +5,10 @@ namespace Pantheon\Terminus;
 use Dotenv\Dotenv;
 use League\Container\ContainerAwareInterface;
 use League\Container\ContainerAwareTrait;
+use League\Container\ContainerInterface;
 use Pantheon\Terminus\Command\ArtCommand;
 use Pantheon\Terminus\Command\Auth\Login;
+use Pantheon\Terminus\Config\Config;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use Symfony\Component\Yaml\Yaml;
 
@@ -26,10 +28,18 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
      * @param string $version
      * @param $workingDir
      */
-    public function __construct($name = '', $version = '', $workingDir = '')
-    {
+    public function __construct(
+      $name = '',
+      $version = '',
+      $workingDir = '',
+      ContainerInterface $container = null
+    ) {
         parent::__construct($name, $version);
         $this->defineConstants();
+        // Store the container in our config object if it was provided.
+        if ($container != null) {
+            Config::setContainer($container);
+        }
     }
 
     /**
