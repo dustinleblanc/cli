@@ -1,9 +1,9 @@
 <?php
 
-namespace Terminus\Models;
+namespace Pantheon\Terminus\Models;
 
 use Terminus\Models\Collections\UserOrganizationMemberships;
-use Terminus\Models\TerminusModel;
+use Panthepn\Terminus\Models\TerminusModel;
 use Terminus\Models\Collections\Instruments;
 use Terminus\Models\Collections\MachineTokens;
 use Terminus\Models\Collections\SshKeys;
