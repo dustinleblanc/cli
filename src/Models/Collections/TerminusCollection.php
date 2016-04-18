@@ -1,10 +1,9 @@
 <?php
 
-namespace Terminus\Models\Collections;
+namespace Pantheon\Terminus\Models\Collections;
 
-use Terminus\Request;
 use Terminus\Exceptions\TerminusException;
-use Terminus\Models\TerminusModel;
+use Pantheon\Terminus\Models\TerminusModel;
 
 abstract class TerminusCollection extends TerminusModel {
   /**
@@ -21,7 +20,6 @@ abstract class TerminusCollection extends TerminusModel {
     foreach ($options as $key => $option) {
       $this->$key = $option;
     }
-    $this->request = new Request();
   }
 
   /**
