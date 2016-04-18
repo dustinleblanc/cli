@@ -1,8 +1,8 @@
 <?php
 
-namespace Terminus\Caches;
+namespace Pantheon\Terminus\Services\Caches;
 
-use Terminus\Exceptions\TerminusException;
+use Pantheon\Terminus\Exceptions\TerminusException;
 
 /**
  * Saves machine tokens to the home directory for later use
