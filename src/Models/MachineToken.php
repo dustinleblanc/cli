@@ -1,6 +1,6 @@
 <?php
 
-namespace Terminus\Models;
+namespace Pantheon\Terminus\Models;
 
 class MachineToken extends TerminusModel {
 

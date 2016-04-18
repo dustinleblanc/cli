@@ -1,9 +1,9 @@
 <?php
 
-namespace Terminus\Models;
+namespace Pantheon\Terminus\Models;
 
-use Terminus\Session;
-use Terminus\Models\TerminusModel;
+use Pantheon\Terminus\Services\Session;
+use Pantheon\Terminus\Models\TerminusModel;
 use Terminus\Models\Collections\OrganizationSiteMemberships;
 use Terminus\Models\Collections\OrganizationUserMemberships;
 use Terminus\Models\Collections\Workflows;

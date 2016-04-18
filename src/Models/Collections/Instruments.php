@@ -1,6 +1,6 @@
 <?php
 
-namespace Terminus\Models\Collections;
+namespace Pantheon\Terminus\Models\Collections;
 
 class Instruments extends TerminusCollection {
 

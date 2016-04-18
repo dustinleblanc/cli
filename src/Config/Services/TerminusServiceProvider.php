@@ -22,6 +22,11 @@ class TerminusServiceProvider extends AbstractServiceProvider
     {
         $this->getContainer()->add('Auth', \Pantheon\Terminus\Services\Authentication::class);
         $this->getContainer()->add('Request', \Pantheon\Terminus\Services\Request::class);
-
+        $this->getContainer()->add('Session', \Pantheon\Terminus\Services\Session::class);
+        $this->getContainer()->add('Workflows', \Pantheon\Terminus\Models\Workflow::class);
+        $this->getContainer()->add('Instruments', \Pantheon\Terminus\Models\Instrument::class);
+        $this->getContainer()->add('MachineTokens', \Pantheon\Terminus\Models\MachineToken::class);
+        $this->getContainer()->add('SshKeys', \Pantheon\Terminus\Models\SshKey::class);
+        $this->getContainer()->add('UserOrganizationMemberships', \Pantheon\Terminus\Models\UserOrganizationMembership::class);
     }
 }

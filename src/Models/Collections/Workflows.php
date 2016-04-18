@@ -1,8 +1,8 @@
 <?php
 
-namespace Terminus\Models\Collections;
+namespace Pantheon\Terminus\Models\Collections;
 
-use Terminus\Models\Workflow;
+use Pantheon\Terminus\Models\Workflow;
 
 class Workflows extends TerminusCollection {
   /**
