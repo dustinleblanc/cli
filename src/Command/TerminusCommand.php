@@ -2,10 +2,11 @@
 
 namespace Pantheon\Terminus\Command;
 
+use League\Container\ContainerAwareInterface;
+use League\Container\ContainerAwareTrait;
 use Symfony\Component\Console\Command\Command;
 use Terminus\Caches\FileCache;
 use Terminus\Exceptions\TerminusException;
-use Terminus\Loggers\Logger;
 use Terminus\Models\Auth;
 use Terminus\Outputters\OutputterInterface;
 use Terminus\Session;
@@ -14,8 +15,9 @@ use Terminus\Utils;
 /**
  * The base class for Terminus commands
  */
-abstract class TerminusCommand extends Command
+abstract class TerminusCommand extends Command implements ContainerAwareInterface
 {
+    use ContainerAwareTrait;
     /**
      * @var Runner
      */
@@ -50,17 +52,6 @@ abstract class TerminusCommand extends Command
     private $outputter;
 
     /**
-     * Retrieves the logger for use
-     *
-     * @return Logger
-     * @non-command
-     */
-    public function log()
-    {
-        return $this->logger;
-    }
-
-    /**
      * Retrieves the outputter for use
      *
      * @return OutputterInterface
@@ -87,12 +78,12 @@ abstract class TerminusCommand extends Command
                 $auth->logInViaMachineToken(compact('email'));
             } else {
                 if (isset($_SERVER['TERMINUS_MACHINE_TOKEN'])
-                  && $token = $_SERVER['TERMINUS_MACHINE_TOKEN']
+                    && $token = $_SERVER['TERMINUS_MACHINE_TOKEN']
                 ) {
                     $auth->logInViaMachineToken(compact('token'));
                 } else {
                     if (isset($_SERVER['TERMINUS_USER'])
-                      && $email = $_SERVER['TERMINUS_USER']
+                        && $email = $_SERVER['TERMINUS_USER']
                     ) {
                         $auth->logInViaMachineToken(compact('email'));
                     } else {
@@ -116,10 +107,11 @@ abstract class TerminusCommand extends Command
      * @throws TerminusException
      */
     protected function failure(
-      $message = 'Command failed',
-      array $context = [],
-      $exit_code = 1
-    ) {
+        $message = 'Command failed',
+        array $context = [],
+        $exit_code = 1
+    )
+    {
         throw new TerminusException($message, $context, $exit_code);
     }
 
@@ -149,15 +141,15 @@ abstract class TerminusCommand extends Command
         $this->loadDirectory($helpers_dir);
         $classes = get_declared_classes();
         $helpers = array_filter(
-          $classes,
-          function ($class) use ($helpers_namespace) {
-              $reflection = new \ReflectionClass($class);
-              $is_helper = (
-                (strpos($class, $helpers_namespace) === 0)
-                && !$reflection->isAbstract()
-              );
-              return $is_helper;
-          }
+            $classes,
+            function ($class) use ($helpers_namespace) {
+                $reflection = new \ReflectionClass($class);
+                $is_helper = (
+                    (strpos($class, $helpers_namespace) === 0)
+                    && !$reflection->isAbstract()
+                );
+                return $is_helper;
+            }
         );
 
         if (!empty($helpers)) {
@@ -165,12 +157,30 @@ abstract class TerminusCommand extends Command
             $helpers_property = new \stdClass();
             foreach ($helpers as $helper) {
                 $property_name = strtolower(
-                  str_replace([$helpers_namespace, 'Helper'], '', $helper)
+                    str_replace([$helpers_namespace, 'Helper'], '', $helper)
                 );
                 $helpers_property->$property_name = new $helper($options);
             }
         }
         $this->helpers = $helpers_property;
+    }
+
+    /**
+     * Includes all PHP files within a directory
+     *
+     * @param string $directory Directory to include PHP files from
+     * @return void
+     */
+    private function loadDirectory($directory)
+    {
+        if ($directory && file_exists($directory)) {
+            $iterator = new \DirectoryIterator($directory);
+            foreach ($iterator as $file) {
+                if ($file->isFile() && $file->isReadable() && $file->getExtension() == 'php') {
+                    include_once $file->getPathname();
+                }
+            }
+        }
     }
 
     /**
@@ -224,21 +234,14 @@ abstract class TerminusCommand extends Command
     }
 
     /**
-     * Includes all PHP files within a directory
+     * Retrieves the logger for use
      *
-     * @param string $directory Directory to include PHP files from
-     * @return void
+     * @return Logger
+     * @non-command
      */
-    private function loadDirectory($directory)
+    public function log()
     {
-        if ($directory && file_exists($directory)) {
-            $iterator = new \DirectoryIterator($directory);
-            foreach ($iterator as $file) {
-                if ($file->isFile() && $file->isReadable() && $file->getExtension() == 'php') {
-                    include_once $file->getPathname();
-                }
-            }
-        }
+        return $this->getApplication()->getContainer()->getLogger();
     }
 
 }

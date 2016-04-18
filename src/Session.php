@@ -1,9 +1,9 @@
 <?php
 
-namespace Terminus;
+namespace Pantheon\Terminus;
 
-use Terminus\Caches\FileCache;
-use Terminus\Models\User;
+use Pantheon\Terminus\Caches\FileCache;
+use Pantheon\Terminus\Models\User;
 
 class Session {
   /**
