@@ -1,11 +1,17 @@
 #! /usr/bin/env php
 <?php
 
-require __DIR__ . '/vendor/autoload.php';
-
 use Pantheon\Terminus\Application;
+use Pantheon\Terminus\Config\Services\TerminusServiceProvider;
+use Pantheon\Terminus\Container\TerminusContainer;
 
-$terminus = new Application('Terminus', 'yolo', __DIR__);
-$terminus->add(new Pantheon\Terminus\Command\ArtCommand());
-$terminus->run();
+require __DIR__ . '/vendor/autoload.php';
+$serviceProvider = new TerminusServiceProvider();
+$container = new TerminusContainer();
+$container->addServiceProvider($serviceProvider);
 
+$app = new Application('Terminus', 'Yolo', __DIR__);
+$app->setContainer($container);
+
+$app->addCommands($app->getAllCommands());
+$app->run();
