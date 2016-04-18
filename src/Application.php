@@ -56,14 +56,16 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
             define('Terminus', true);
         }
         $default_constants = Yaml::parse(
-            file_get_contents(TERMINUS_ROOT . '/config/constants.yml')
+          file_get_contents(TERMINUS_ROOT . '/config/constants.yml')
         );
         foreach ($default_constants as $var_name => $default) {
             if (!defined($var_name)) {
                 if (isset($_SERVER[$var_name]) && ($_SERVER[$var_name] != '')) {
                     define($var_name, $_SERVER[$var_name]);
-                } else if (!defined($var_name)) {
-                    define($var_name, $default);
+                } else {
+                    if (!defined($var_name)) {
+                        define($var_name, $default);
+                    }
                 }
             }
         }
@@ -108,9 +110,9 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
         $debug = debug_backtrace();
         $script_location = array_pop($debug);
         $script_name = str_replace(
-            TERMINUS_ROOT . '/',
-            '',
-            $script_location['file']
+          TERMINUS_ROOT . '/',
+          '',
+          $script_location['file']
         );
         return $script_name;
     }
@@ -123,8 +125,8 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
     public function getAllCommands()
     {
         return [
-            new ArtCommand,
-            new Login
+          new ArtCommand,
+          new Login
         ];
     }
 
