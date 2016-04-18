@@ -58,8 +58,7 @@ class ArtCommand extends TerminusCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $work = $input->getArgument('work') ?: $this->works[array_rand($this->works)];
-        $artwork_content = file_get_contents($this->getApplication()
-            ->getWorkingDir() . "/assets/{$work}.txt");
+        $artwork_content = file_get_contents(TERMINUS_ROOT . "/assets/{$work}.txt");
 
         try {
 
