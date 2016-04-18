@@ -2,6 +2,7 @@
 namespace Pantheon\Terminus;
 
 
+use Dotenv\Dotenv;
 use League\Container\ContainerAwareInterface;
 use League\Container\ContainerAwareTrait;
 use Pantheon\Terminus\Command\ArtCommand;
@@ -9,11 +10,15 @@ use Pantheon\Terminus\Command\Auth\Login;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * Class Application
+ *
+ * Base Symfony application that encapsulates Terminus Command Line Utility.
+ * @package Pantheon\Terminus
+ */
 class Application extends SymfonyApplication implements ContainerAwareInterface
 {
     use ContainerAwareTrait;
-
-    protected $workingDir;
 
     /**
      * Application constructor.
@@ -24,7 +29,6 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
     public function __construct($name = '', $version = '', $workingDir = '')
     {
         parent::__construct($name, $version);
-        $this->workingDir = $workingDir;
         $this->defineConstants();
     }
 
@@ -60,24 +64,51 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
     }
 
     /**
-     * @return mixed
+     * Finds and returns the root directory of Terminus
+     *
+     * @param string $current_dir Directory to start searching at
+     * @return string
+     * @throws TerminusError
      */
-    public function getWorkingDir()
+    private function getTerminusRoot($current_dir = null)
     {
-        return $this->workingDir;
+        if (is_null($current_dir)) {
+            $current_dir = dirname(__DIR__);
+        }
+        if (file_exists("$current_dir/composer.json")) {
+            return $current_dir;
+        }
+        $dir = explode('/', $current_dir);
+        array_pop($dir);
+        if (empty($dir)) {
+            throw new TerminusError("Could not locate root to set TERMINUS_ROOT.");
+        }
+        $dir = implode('/', $dir);
+        $root_dir = $this->getTerminusRoot($dir);
+        return $root_dir;
     }
 
     /**
-     * @param mixed $workingDir
+     * Finds and returns the name of the script running Terminus functions
+     *
+     * @return string
      */
-    public function setWorkingDir($workingDir)
+    private function getTerminusScript()
     {
-        $this->workingDir = $workingDir;
+        $debug = debug_backtrace();
+        $script_location = array_pop($debug);
+        $script_name = str_replace(
+            TERMINUS_ROOT . '/',
+            '',
+            $script_location['file']
+        );
+        return $script_name;
     }
 
     /**
-     * Return all Terminus commands from all scopes (stubbed).
+     * Retrieve all available Terminus commands. (stubbed)
      * @return array
+     *    A collection of Terminus commands.
      */
     public function getAllCommands()
     {
@@ -90,13 +121,14 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
     /**
      * Imports environment variables
      *
+     * Load environment variables from __DIR__/.env
+     *
      * @return void
      */
     private function importEnvironmentVariables()
     {
-        //Load environment variables from __DIR__/.env
         if (file_exists(getcwd() . '/.env')) {
-            $env = new \Dotenv\Dotenv(getcwd());
+            $env = new Dotenv(getcwd());
             $env->load();
         }
     }
