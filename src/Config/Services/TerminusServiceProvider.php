@@ -14,9 +14,14 @@ use League\Container\ServiceProvider\AbstractServiceProvider;
 class TerminusServiceProvider extends AbstractServiceProvider
 {
     protected $provides = [
+        'Auth',
+        'Request'
     ];
 
     public function register()
     {
+        $this->getContainer()->add('Auth', \Pantheon\Terminus\Services\Authentication::class);
+        $this->getContainer()->add('Request', \Pantheon\Terminus\Services\Request::class);
+
     }
 }
