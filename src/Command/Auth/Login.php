@@ -5,6 +5,7 @@ use League\Container\ContainerAwareInterface;
 use League\Container\ContainerAwareTrait;
 use Pantheon\Terminus\Command\TerminusCommand;
 use Pantheon\Terminus\Exceptions\TerminusException;
+use Pantheon\Terminus\Services\Authentication;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -46,70 +47,15 @@ class Login extends TerminusCommand
     }
 
     /**
-     * Log in as a user
-     *
-     *  ## OPTIONS
-     * [<email>]
-     * : Email address to log in as.
-     *
-     * [--password=<value>]
-     * : Log in non-interactively with this password. Useful for automation.
-     *
-     * [--machine-token=<value>]
-     * : Authenticates using a machine token from your dashboard. Stores the
-     *   token for future use.
-     *
-     * [--debug]
-     * : dump call information when logging in.
+     * @inheritdoc
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->logInViaMachineToken($input->getOption('machine-token'));
-    }
-
-    /**
-     * Execute the login based on a machine token
-     *
-     * @param string[] $args Elements as follow:
-     *   string token Machine token to initiate login with
-     *   string email Email address to locate token with
-     * @return bool True if login succeeded
-     * @throws TerminusException
-     */
-    private function logInViaMachineToken($token) {
-        $request = new Request();
         $options = [
-            'form_params' => [
-                'machine_token' => $token,
-                'client'        => 'terminus',
-            ],
-            'method' => 'post',
+            'token' => $input->getOption('machine-token'),
+            'email' => $input->getArgument('email')
         ];
-
-        try {
-            $response = $request->request(
-                'authorize/machine-token',
-                $options
-            );
-        } catch (\Exception $e) {
-            throw new TerminusException(
-                'The provided machine token is not valid.',
-                [],
-                1
-            );
-        }
-
-        $data = $response['data'];
-        $this->setInstanceData($response['data']);
-        $user = Session::getUser();
-        $user->fetch();
-        $user_data = $user->serialize();
-        if (isset($args['token'])) {
-            $this->tokens_cache->add(
-                ['email' => $user_data['email'], 'token' => $token,]
-            );
-        }
-        return true;
+        $auth = new Authentication();
+        $auth->logInViaMachineToken($options);
     }
-
 }
