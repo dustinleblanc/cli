@@ -4,6 +4,7 @@ namespace Pantheon\Terminus\Command;
 
 use League\Container\ContainerAwareInterface;
 use League\Container\ContainerAwareTrait;
+use Pantheon\Terminus\Config\Config;
 use Symfony\Component\Console\Command\Command;
 use Terminus\Caches\FileCache;
 use Terminus\Exceptions\TerminusException;
@@ -50,6 +51,15 @@ abstract class TerminusCommand extends Command implements ContainerAwareInterfac
      * @var Outputter
      */
     private $outputter;
+
+    /**
+     * TerminusCommand constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct($this->getName());
+        $this->setContainer(Config::getContainer());
+    }
 
     /**
      * Retrieves the outputter for use

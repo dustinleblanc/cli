@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Pantheon\Terminus\Models\Auth;
 use Pantheon\Terminus\Services\Request;
+use Symfony\Component\Console\Question\Question;
 
 /**
  * Class Login
@@ -51,11 +52,80 @@ class Login extends TerminusCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $options = [
-            'token' => $input->getOption('machine-token'),
-            'email' => $input->getArgument('email')
-        ];
-        $auth = new Authentication();
-        $auth->logInViaMachineToken($options);
+        $auth = $this->getContainer()->get('Auth');
+        if ($this->callLoginAction($input, $auth, $output)) {
+            return $output->writeln('<success>You have successfully logged in!</success>');
+        } else {
+            return $output->writeln(('<error>We were not able to successfully log you in.</error>'));
+        }
+
+    }
+
+    /**
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Pantheon\Terminus\Services\Authentication $auth
+     * @return bool|\Pantheon\Terminus\Services\Authentication
+     * @throws \Pantheon\Terminus\Exceptions\TerminusException
+     */
+    protected function callLoginAction(InputInterface $input, Authentication $auth, OutputInterface $output)
+    {
+        return $this->tryTokenLogin($input, $auth, $output) ?: $this->tryEmailLogin($input, $auth, $output);
+    }
+
+    /**
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Pantheon\Terminus\Services\Authentication $auth
+     * @return \Pantheon\Terminus\Services\Authentication
+     */
+    protected function tryTokenLogin(
+      InputInterface $input,
+      Authentication $auth,
+      OutputInterface $output
+    ) {
+        if ($token = $input->getOption('machine-token')) {
+            return $auth->loginViaMachineToken($token);
+        } elseif ($email = $input->getArgument('email')) {
+            if ($token = $auth->getTokenByEmail($email)) {
+                return $auth->loginViaMachineToken($token);
+            }
+        }
+    }
+
+    /**
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Pantheon\Terminus\Services\Authentication $auth
+     * @param \Symfony\Component\Console\Output\OutputInterface $output
+     * @return bool
+     */
+    private function tryEmailLogin(InputInterface $input, Authentication $auth, OutputInterface $output)
+    {
+        $email = $input->getArgument('email') ?: $this->askForCredential($input, $output, 'email');
+        $password = $input->getOption('password') ?: $this->askForCredential($input, $output, 'password');
+        return $auth->logInViaUsernameAndPassword($email, $password);
+    }
+
+    /**
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output
+     * @param string $credential
+     * @return mixed
+     */
+    private function askForCredential(InputInterface $input, OutputInterface $output, $credential = '')
+    {
+        $helper = $this->getHelper('question');
+        switch ($credential) {
+            case 'email':
+                $hidden = false;
+                $message = 'Please enter your email:';
+                break;
+            case 'password':
+                $hidden = true;
+                $message = 'Please enter your password:';
+        }
+        $question = new Question($message);
+        $question->setHidden($hidden);
+        $question->setHiddenFallback(false);
+
+        return $helper->ask($input, $output, $question);
     }
 }

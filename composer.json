@@ -19,11 +19,12 @@
     "twig/twig": "^1.0",
     "vlucas/phpdotenv": "^2.3",
     "wp-cli/php-cli-tools": "~0.11.1",
-    "league/container": "^2.2"
+    "league/container": "^2.2",
+    "symfony/console": "2.*"
   },
   "autoload": {
     "psr-0": { "Terminus": "php" },
-    "psr-4": { "Pantheon\\Terminus\\": "src"}
+    "psr-4": { "Pantheon\\Terminus\\": "src" }
   },
   "require-dev": {
     "behat/behat": "^3.1",
