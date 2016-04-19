@@ -14,30 +14,14 @@ use Pantheon\Terminus\Services\Caches\TokensCache;
 class Authentication extends TerminusService
 {
     /**
-     * @var TokensCache
-     */
-    private $tokens_cache;
-
-    /**
-     * Object constructor
-     *
-     * @param object $attributes Attributes of this model
-     * @param array  $options    Options to set as $this->key
-     * @return Authentication
-     */
-    public function __construct($attributes = null, array $options = array()) {
-        $this->tokens_cache = new TokensCache();
-        parent::__construct($attributes, $options);
-    }
-
-    /**
      * Gets all email addresses for which there are saved machine tokens
      *
      * @return string[]
      */
     public function getAllSavedTokenEmails() {
-        $emails = $this->tokens_cache->getAllSavedTokenEmails();
-        return $emails;
+        return $this->getContainer()
+            ->get('TokenCache')
+            ->getAllSavedTokenEmails();
     }
 
     /**

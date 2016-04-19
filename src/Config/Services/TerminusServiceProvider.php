@@ -15,7 +15,13 @@ class TerminusServiceProvider extends AbstractServiceProvider
 {
     protected $provides = [
         'Auth',
-        'Request'
+        'Request',
+        'Session',
+        'Workflows',
+        'Instruments',
+        'MachineTokens',
+        'SshKeys',
+        'UserOrganizationMemberships'
     ];
 
     public function register()
@@ -27,6 +33,7 @@ class TerminusServiceProvider extends AbstractServiceProvider
         $this->getContainer()->add('Instruments', \Pantheon\Terminus\Models\Instrument::class);
         $this->getContainer()->add('MachineTokens', \Pantheon\Terminus\Models\MachineToken::class);
         $this->getContainer()->add('SshKeys', \Pantheon\Terminus\Models\SshKey::class);
+        $this->getContainer()->add('TokenCache', \Pantheon\Terminus\Services\Caches\TokensCache::class);
         $this->getContainer()->add('UserOrganizationMemberships', \Pantheon\Terminus\Models\UserOrganizationMembership::class);
     }
 }
