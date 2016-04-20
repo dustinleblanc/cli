@@ -9,6 +9,7 @@
 namespace Pantheon\Terminus\Services;
 
 
+use Interop\Container\ContainerInterface;
 use Pantheon\Terminus\Exceptions\TerminusException;
 
 /**
@@ -32,9 +33,9 @@ class Authentication extends TerminusService
      * Authentication constructor.
      * @param Request $request
      */
-    public function __construct(Request $request = null, Session $session = null)
+    public function __construct(ContainerInterface $container = null, Request $request = null, Session $session = null)
     {
-        parent::__construct();
+        parent::__construct($container);
         $this->request = $request ?: $this->getContainer()->get('Request');
         $this->session = $session ?: $this->getContainer()->get('Session');
     }

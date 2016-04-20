@@ -11,6 +11,7 @@ namespace Pantheon\Terminus\Services;
 
 use League\Container\ContainerAwareInterface;
 use League\Container\ContainerAwareTrait;
+use League\Container\ContainerInterface;
 use Pantheon\Terminus\Config\Config;
 
 abstract class TerminusService implements ContainerAwareInterface
@@ -20,9 +21,10 @@ abstract class TerminusService implements ContainerAwareInterface
 
     /**
      * TerminusService constructor.
+     * @param ContainerInterface $container
      */
-    public function __construct()
+    public function __construct(ContainerInterface $container = null)
     {
-        $this->container = Config::getContainer();
+        $this->container = $container ?: Config::getContainer();
     }
 }
