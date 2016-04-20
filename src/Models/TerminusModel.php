@@ -23,6 +23,8 @@ abstract class TerminusModel implements ContainerAwareInterface
      */
     protected $attributes;
 
+    protected $fetchUrl;
+
     /**
      * Object constructor
      *
@@ -32,12 +34,6 @@ abstract class TerminusModel implements ContainerAwareInterface
     public function __construct($attributes = null, array $options = array())
     {
         $this->container = Config::getContainer();
-        if (!defined('Terminus')) {
-            $configurator = new Configurator();
-        }
-        if ($attributes == null) {
-            $attributes = new \stdClass();
-        }
         if (isset($attributes->id)) {
             $this->id = $attributes->id;
         }
@@ -88,11 +84,9 @@ abstract class TerminusModel implements ContainerAwareInterface
         }
 
         $options = array_merge(
-            array('options' => array('method' => 'get')),
             $this->getFetchArgs(),
             $fetch_args
         );
-
         $results = $this->request->request(
             $this->getFetchUrl(),
             $options
@@ -159,7 +153,7 @@ abstract class TerminusModel implements ContainerAwareInterface
      */
     protected function getFetchUrl()
     {
-        return '';
+        return $this->fetchUrl;
     }
 
 }
