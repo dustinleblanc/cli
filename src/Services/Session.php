@@ -5,7 +5,7 @@ namespace Pantheon\Terminus\Services;
 use Pantheon\Terminus\Services\Caches\FileCache;
 use Pantheon\Terminus\Models\User;
 
-class Session
+class Session extends TerminusService
 {
     /**
      * @var Session
@@ -15,19 +15,16 @@ class Session
      * @var object
      */
     protected $data;
+    protected $cache;
 
     /**
      * Instantiates object, sets session data
      */
     public function __construct()
     {
-        $cache = new FileCache();
-        $session = $cache->getData('session');
-        $this->data = $session;
-        if (empty($session)) {
-            $this->data = new \stdClass();
-        }
-
+        parent::__construct();
+        $this->cache = $this->getContainer()->get('FileCache');
+        $this->data = $this->getCache()->getData('session') ?: new \stdClass();
         self::$instance = $this;
     }
 
@@ -53,8 +50,7 @@ class Session
      */
     public static function getData()
     {
-        $session = Session::instance();
-        return $session->data;
+        return self::instance()->data;
     }
 
     /**
@@ -65,9 +61,7 @@ class Session
      */
     public static function getValue($key)
     {
-        $session = Session::instance();
-        $session_property = $session->get($key);
-        return $session_property;
+        return self::instance()->get($key);
     }
 
     /**
@@ -124,9 +118,25 @@ class Session
      */
     public static function getUser()
     {
-        $user_uuid = Session::getValue('user_uuid');
-        $user = new User((object)array('id' => $user_uuid));
-        return $user;
+        return User::findOrCreate(
+            self::getValue('user_id')
+        );
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCache()
+    {
+        return $this->cache;
+    }
+
+    /**
+     * @param mixed $cache
+     */
+    public function setCache($cache)
+    {
+        $this->cache = $cache;
     }
 
 }
