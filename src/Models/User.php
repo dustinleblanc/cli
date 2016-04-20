@@ -2,6 +2,7 @@
 
 namespace Pantheon\Terminus\Models;
 
+use Pantheon\Terminus\Config\Config;
 use Terminus\Models\Collections\UserOrganizationMemberships;
 use Pantheon\Terminus\Models\TerminusModel;
 use Terminus\Models\Collections\Instruments;
@@ -36,6 +37,7 @@ class User extends TerminusModel
      * @var Workflows
      */
     protected $workflows;
+    protected $cache;
 
     /**
      * @var \stdClass
@@ -55,32 +57,62 @@ class User extends TerminusModel
      * @param object $attributes Attributes of this model
      * @param array $options Options to set as $this->key
      */
-    public function __construct($attributes = null, array $options = array())
+    public function __construct(\stdClass $attributes = null, array $options = array())
     {
         parent::__construct($attributes, $options);
+        $this->cache = $this->getContainer()->get('FileCache');
+        $this->setFetchUrl(sprintf('users/%s', $this->id));
+        $data = $this->fetch();
+        $this->attributes = $data->attributes;
+        $this->workflows = $data->workflows;
+        $this->instruments = $data->instruments;
+        $this->machine_tokens = $data->machine_tokens;
+        $this->ssh_keys = $data->ssh_keys;
+        $this->organizations = $data->organizations;
+        $this->getCache()->putData('user', $this);
+    }
 
-        if (isset($attributes->profile)) {
-            $this->profile = $attributes->profile;
+    public static function findOrCreate($id)
+    {
+        $userCache = Config::getContainer()->get('FileCache')->getData('User');
+        if (property_exists($userCache, 'id')
+            && $userCache->id == $id) {
+            return $userCache;
+
         }
-        $params = ['user' => $this,];
-        $container = $this->getContainer();
-        $this->workflows = $container->get('Workflows');
-        $this->instruments = $container->get('Instruments');
-        $this->machine_tokens = $container->get('MachineTokens');
-        $this->ssh_keys = $container->get('SshKeys');
-        $this->organizations = $container->get('UserOrganizationMemberships');
-        $this->injectParams();
+        return new User((object)['id' => $id]);
     }
 
     /**
-     * Give the URL for collection data fetching
-     *
-     * @return [string] $url URL to use in fetch query
+     * @return \stdClass
      */
-    protected function getFetchUrl()
+    public function getProfile()
     {
-        $url = sprintf('users/%s', $this->id);
-        return $url;
+        return $this->profile;
+    }
+
+    /**
+     * @param \stdClass $profile
+     */
+    public function setProfile($profile)
+    {
+        $this->profile = $profile;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCache()
+    {
+        return $this->cache;
+    }
+
+    /**
+     * @param mixed $cache
+     */
+    public function setCache($cache)
+    {
+        $this->cache = $cache;
     }
 
     /**
@@ -180,8 +212,9 @@ class User extends TerminusModel
         $this->aliases = $response['data']->drush_aliases;
     }
 
-    private function injectParams()
+    private function setFetchUrl($url)
     {
+        $this->fetchUrl = $url;
     }
 
 }
