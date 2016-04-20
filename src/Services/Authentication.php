@@ -10,15 +10,21 @@ namespace Pantheon\Terminus\Services;
 
 
 use Pantheon\Terminus\Exceptions\TerminusException;
-use Pantheon\Terminus\Services\Request;
 
 /**
  *
- * @property mixed session
+ * @property Session session
  */
 class Authentication extends TerminusService
 {
+    /**
+     * @var Request
+     */
     protected $request;
+
+    /**
+     * @var Session
+     */
     protected $session;
 
 
@@ -41,8 +47,8 @@ class Authentication extends TerminusService
     public function getAllSavedTokenEmails()
     {
         return $this->getContainer()
-          ->get('TokenCache')
-          ->getAllSavedTokenEmails();
+            ->get('TokenCache')
+            ->getAllSavedTokenEmails();
     }
 
     /**
@@ -53,11 +59,11 @@ class Authentication extends TerminusService
     public function getMachineTokenCreationUrl()
     {
         return sprintf(
-          '%s://%s:%s/machine-token/create/%s',
-          TERMINUS_PROTOCOL,
-          TERMINUS_HOST,
-          TERMINUS_PORT,
-          gethostname()
+            '%s://%s:%s/machine-token/create/%s',
+            TERMINUS_PROTOCOL,
+            TERMINUS_HOST,
+            TERMINUS_PORT,
+            gethostname()
         );
     }
 
@@ -69,11 +75,11 @@ class Authentication extends TerminusService
     public function loggedIn()
     {
         return (
-          isset($this->session->session)
-          && (
-            Utils\isTest()
-            || ($session->session_expire_time >= time())
-          )
+            isset($this->session->session)
+            && (
+                Utils\isTest()
+                || ($session->session_expire_time >= time())
+            )
         );
     }
 
@@ -87,63 +93,46 @@ class Authentication extends TerminusService
     public function logInViaMachineToken($token = '')
     {
         $options = [
-          'form_params' => [
-            'machine_token' => $token,
-            'client' => 'terminus',
-          ],
-          'method' => 'post',
+            'form_params' => [
+                'machine_token' => $token,
+                'client' => 'terminus',
+            ],
+            'method' => 'post',
         ];
         return $this->attemptLoginRequest($options);
+    }
+
+    public function getCurrentUser()
+    {
+        try {
+            return $this->getSession()->getUser();
+        } catch(\Exception $e) {
+            throw new TerminusException('Unable to retrieve user');
+        }
     }
 
     /**
      * @param Array $options
      * @return Array Response
-     *      @see \Pantheon\Terminus\Services\Request::request().
+     * @see \Pantheon\Terminus\Services\Request::request().
      * @throws TerminusException
      */
     protected function attemptLoginRequest(Array $options = [])
     {
         try {
             $response = $this->request->request(
-              'authorize/machine-token',
-              $options
+                'authorize/machine-token',
+                $options
             );
+            return $this->getSession()->setData($response['data']);
         } catch (\Exception $e) {
             throw new TerminusException(
-              'The provided credentials are not valid.',
-              [],
-              1
+                'The provided credentials are not valid.',
+                [],
+                1
             );
         }
         return $response;
-    }
-
-    /**
-     * Saves the session data to a cookie
-     *
-     * @param \stdClass $data Session data to save
-     * @return bool Always true
-     */
-    private
-    function setInstanceData(
-      \stdClass $data
-    ) {
-        if (!isset($data->machine_token)) {
-            $machine_token = (array)Session::instance()->get('machine_token');
-        } else {
-            $machine_token = $data->machine_token;
-        }
-        $session = [
-          'user_uuid' => $data->user_id,
-          'session' => $data->session,
-          'session_expire_time' => $data->expires_at,
-        ];
-        if ($machine_token && is_string($machine_token)) {
-            $session['machine_token'] = $machine_token;
-        }
-        Session::instance()->setData($session);
-        return true;
     }
 
     /**
@@ -154,21 +143,49 @@ class Authentication extends TerminusService
      * @return bool True if login succeeded
      * @throws TerminusException
      */
-    public
-    function logInViaUsernameAndPassword(
-      $email,
-      $password
-    ) {
+    public function logInViaUsernameAndPassword(
+        $email,
+        $password
+    )
+    {
         $options = [
-          'form_params' => [
-            'email' => $email,
-            'password' => $password,
-          ],
-          'method' => 'post'
+            'form_params' => [
+                'email' => $email,
+                'password' => $password,
+            ],
+            'method' => 'post'
         ];
         $this->attemptLoginRequest($options);
 
         $this->setInstanceData($response['data']);
+        return true;
+    }
+
+    /**
+     * Saves the session data to a cookie
+     *
+     * @param \stdClass $data Session data to save
+     * @return bool Always true
+     */
+    private
+    function setInstanceData(
+        \stdClass $data
+    )
+    {
+        if (!isset($data->machine_token)) {
+            $machine_token = (array)Session::instance()->get('machine_token');
+        } else {
+            $machine_token = $data->machine_token;
+        }
+        $session = [
+            'user_uuid' => $data->user_id,
+            'session' => $data->session,
+            'session_expire_time' => $data->expires_at,
+        ];
+        if ($machine_token && is_string($machine_token)) {
+            $session['machine_token'] = $machine_token;
+        }
+        Session::instance()->setData($session);
         return true;
     }
 
@@ -189,51 +206,53 @@ class Authentication extends TerminusService
     }
 
     /**
-     * Checks whether email is in a valid or not
-     *
-     * @param string $email String to be evaluated for email address format
-     * @return bool True if $email is in email address format
-     */
-    private function isValidEmail($email) {
-        $is_email = !is_bool(filter_var($email, FILTER_VALIDATE_EMAIL));
-        return $is_email;
-    }
-
-    /**
      * Checks to see whether the email has been set with a machine token
      *
      * @param string $email Email address to check for
      * @return bool
      */
-    public function tokenExistsForEmail($email) {
-        $file_exists = $this->tokens_cache->tokenExistsForEmail($email);
-        return $file_exists;
+    public function tokenExistsForEmail($email)
+    {
+        return $this->getContainer()
+            ->get('TokenCache')
+            ->tokenExistsForEmail($email);
     }
 
     /**
      * @param $args
      * @return mixed
      */
-    public function getTokenByEmail($args) {
+    public function getTokenByEmail($args)
+    {
         return $this->getContainer()
-          ->get('TokenCache')
-          ->findByEmail($args['email'])['token'];
+            ->get('TokenCache')
+            ->findByEmail($args['email'])['token'];
     }
 
     /**
-     * @param $response
+     * @return Session
      */
-    public function updateTokenCache($response)
+    public function getSession()
     {
-        $this->setInstanceData($response['data']);
-        $user = $this->getContainer()->get('Session')::getUser();
-        $user->fetch();
-        $user_data = $user->serialize();
-        $this->getContainer()
-          ->get('TokenCache')
-          ->add([
-            'email' => $user_data['email'],
-            'token' => $user_data['token']
-          ]);
+        return $this->session;
+    }
+
+    /**
+     * @param Session $session
+     */
+    public function setSession($session)
+    {
+        $this->session = $session;
+    }
+
+    /**
+     * Checks whether email is in a valid or not
+     *
+     * @param string $email String to be evaluated for email address format
+     * @return bool True if $email is in email address format
+     */
+    private function isValidEmail($email)
+    {
+         return !is_bool(filter_var($email, FILTER_VALIDATE_EMAIL));
     }
 }
