@@ -16,20 +16,4 @@ use League\Container\ServiceProvider\ServiceProviderAggregateInterface;
 
 class TerminusContainer extends Container
 {
-    public function __construct(
-        ServiceProviderAggregateInterface $providers = null,
-        InflectorAggregateInterface $inflectors = null,
-        DefinitionFactoryInterface $definitionFactory = null
-    )
-    {
-        parent::__construct($providers, $inflectors, $definitionFactory);
-    }
-
-    /**
-     * Get a service.
-     */
-    public function get($alias, array $args = [])
-    {
-        return parent::get($alias, $args);
-    }
 }
