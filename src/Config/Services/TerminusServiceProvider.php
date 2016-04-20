@@ -21,6 +21,7 @@ class TerminusServiceProvider extends AbstractServiceProvider
         'Instruments',
         'MachineTokens',
         'SshKeys',
+        'FileCache',
         'TokenCache',
         'UserOrganizationMemberships'
     ];
@@ -35,6 +36,7 @@ class TerminusServiceProvider extends AbstractServiceProvider
         $this->getContainer()->add('Instruments', \Pantheon\Terminus\Models\Instrument::class);
         $this->getContainer()->add('MachineTokens', \Pantheon\Terminus\Models\MachineToken::class);
         $this->getContainer()->add('SshKeys', \Pantheon\Terminus\Models\SshKey::class);
+        $this->getContainer()->add('FileCache', \Pantheon\Terminus\Services\Caches\FileCache::class);
         $this->getContainer()->add('TokenCache', \Pantheon\Terminus\Services\Caches\TokensCache::class);
         $this->getContainer()->add('UserOrganizationMemberships', \Pantheon\Terminus\Models\UserOrganizationMembership::class);
     }

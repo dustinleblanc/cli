@@ -8,6 +8,8 @@ use League\Container\ContainerAwareTrait;
 use League\Container\ContainerInterface;
 use Pantheon\Terminus\Command\ArtCommand;
 use Pantheon\Terminus\Command\Auth\Login;
+use Pantheon\Terminus\Command\Auth\Logout;
+use Pantheon\Terminus\Command\Auth\WhoAmI;
 use Pantheon\Terminus\Config\Config;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use Symfony\Component\Yaml\Yaml;
@@ -29,10 +31,10 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
      * @param $workingDir
      */
     public function __construct(
-      $name = '',
-      $version = '',
-      $workingDir = '',
-      ContainerInterface $container = null
+        $name = '',
+        $version = '',
+        $workingDir = '',
+        ContainerInterface $container = null
     ) {
         parent::__construct($name, $version);
         $this->defineConstants();
@@ -56,7 +58,7 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
             define('Terminus', true);
         }
         $default_constants = Yaml::parse(
-          file_get_contents(TERMINUS_ROOT . '/config/constants.yml')
+            file_get_contents(TERMINUS_ROOT . '/config/constants.yml')
         );
         foreach ($default_constants as $var_name => $default) {
             if (!defined($var_name)) {
@@ -110,9 +112,9 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
         $debug = debug_backtrace();
         $script_location = array_pop($debug);
         $script_name = str_replace(
-          TERMINUS_ROOT . '/',
-          '',
-          $script_location['file']
+            TERMINUS_ROOT . '/',
+            '',
+            $script_location['file']
         );
         return $script_name;
     }
@@ -125,8 +127,10 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
     public function getAllCommands()
     {
         return [
-          new ArtCommand,
-          new Login
+            new ArtCommand,
+            new Login,
+            new WhoAmI,
+            new Logout,
         ];
     }
 
