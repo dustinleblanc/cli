@@ -75,13 +75,7 @@ class Authentication extends TerminusService
      */
     public function loggedIn()
     {
-        return (
-            isset($this->session->session)
-            && (
-                Utils\isTest()
-                || ($session->session_expire_time >= time())
-            )
-        );
+        return ($this->session->get('session') && $this->session->getExpireTime() >= time());
     }
 
     /**
