@@ -1,0 +1,4 @@
+suites:
+    terminus_suite:
+        namespace: Pantheon\Terminus
+        psr4_prefix: Pantheon\Terminus
