@@ -16,6 +16,7 @@ class Session extends TerminusService
      */
     protected $data;
     protected $cache;
+    protected $expireTime;
 
     /**
      * Instantiates object, sets session data
@@ -25,6 +26,7 @@ class Session extends TerminusService
         parent::__construct();
         $this->cache = $this->getContainer()->get('FileCache');
         $this->data = $this->getCache()->getData('session') ?: new \stdClass();
+        $this->setExpireTime($this->data['session_expire_time']);
         self::$instance = $this;
     }
 
@@ -137,6 +139,22 @@ class Session extends TerminusService
     public function setCache($cache)
     {
         $this->cache = $cache;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getExpireTime()
+    {
+        return $this->expireTime;
+    }
+
+    /**
+     * @param mixed $expireTime
+     */
+    public function setExpireTime($expireTime)
+    {
+        $this->expireTime = $expireTime;
     }
 
 }
