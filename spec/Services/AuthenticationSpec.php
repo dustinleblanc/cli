@@ -17,6 +17,7 @@ class AuthenticationSpec extends ObjectBehavior
         $session->beADoubleOf(Session::class);
         $session->getExpireTime()->willReturn(time() + 20);
         $session->get('session')->willReturn(true);
+        $session->setData(null)->willReturn(true);
 
         $this->beConstructedWith($container, $request, $session);
 
@@ -30,5 +31,16 @@ class AuthenticationSpec extends ObjectBehavior
     function it_knows_if_you_are_logged_in($session)
     {
         $this->loggedIn()->shouldReturn(true);
+    }
+
+    function it_returns_self_when_login_attempted()
+    {
+        $this->loginViaMachineToken('foo')->shouldReturnAnInstanceOf('Pantheon\Terminus\Services\Authentication');
+        $this->loginViaUsernameAndPassword('foo@bar.com', 'baz')->shouldReturnAnInstanceOf('Pantheon\Terminus\Services\Authentication');
+    }
+
+    function it_rejects_bad_emails()
+    {
+        $this->shouldThrow('\InvalidArgumentException')->during('loginViaUsernameAndPassword',['not a valid email', 'password']);
     }
 }
