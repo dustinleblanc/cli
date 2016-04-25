@@ -1,20 +1,18 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: dustinleblanc
- * Date: 4/18/16
- * Time: 10:57 AM
- */
 
 namespace Pantheon\Terminus\Services;
 
 
+use GuzzleHttp\Psr7\Response;
 use Interop\Container\ContainerInterface;
 use Pantheon\Terminus\Exceptions\TerminusException;
+use Pantheon\Terminus\Services\Caches\TokensCache;
+use Psy\Shell;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 
 /**
- *
- * @property Session session
+ * The Authentication class is responsible for handling authentication actions with the Pantheon API.
+ * @property TokensCache tokenCache
  */
 class Authentication extends TerminusService
 {
@@ -24,20 +22,30 @@ class Authentication extends TerminusService
     protected $request;
 
     /**
+     * @var array
+     */
+    protected $response;
+
+    /**
      * @var Session
      */
     protected $session;
 
+    protected $tokenCache;
+
 
     /**
      * Authentication constructor.
+     * @param ContainerInterface $container
      * @param Request $request
+     * @param Session $session
      */
-    public function __construct(ContainerInterface $container = null, Request $request = null, Session $session = null)
+    public function __construct(ContainerInterface $container = null, Request $request = null, Session $session = null, TokensCache $tokensCache = null)
     {
         parent::__construct($container);
         $this->request = $request ?: $this->getContainer()->get('Request');
         $this->session = $session ?: $this->getContainer()->get('Session');
+        $this->tokenCache = $tokensCache ?: $this->getContainer()->get('TokenCache');
     }
 
     /**
@@ -75,7 +83,26 @@ class Authentication extends TerminusService
      */
     public function loggedIn()
     {
-        return ($this->session->get('session') && $this->session->getExpireTime() >= time());
+        return (
+            $this->getSession()->get('session')
+            && $this->getSession()->getExpireTime() >= time()
+        );
+    }
+
+    /**
+     * @return Session
+     */
+    public function getSession()
+    {
+        return $this->session;
+    }
+
+    /**
+     * @param Session $session
+     */
+    public function setSession($session)
+    {
+        $this->session = $session;
     }
 
     /**
@@ -94,40 +121,21 @@ class Authentication extends TerminusService
             ],
             'method' => 'post',
         ];
-        return $this->attemptLoginRequest($options);
+        $this->setResponse($this->attemptLoginRequest($options));
+        return $this;
     }
 
+    /**
+     * @return \Pantheon\Terminus\Models\User
+     * @throws TerminusException
+     */
     public function getCurrentUser()
     {
         try {
             return $this->getSession()->getUser();
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             throw new TerminusException('Unable to retrieve user');
         }
-    }
-
-    /**
-     * @param Array $options
-     * @return Array Response
-     * @see \Pantheon\Terminus\Services\Request::request().
-     * @throws TerminusException
-     */
-    protected function attemptLoginRequest(Array $options = [])
-    {
-        try {
-            $response = $this->request->request(
-                'authorize/machine-token',
-                $options
-            );
-            return $this->getSession()->setData($response['data']);
-        } catch (\Exception $e) {
-            throw new TerminusException(
-                'The provided credentials are not valid.',
-                [],
-                1
-            );
-        }
-        return $response;
     }
 
     /**
@@ -135,14 +143,14 @@ class Authentication extends TerminusService
      *
      * @param string $email Email address associated with a Pantheon account
      * @param string $password Password for the account
-     * @return bool True if login succeeded
-     * @throws TerminusException
+     * @return $this
+     * @throws InvalidArgumentException
      */
-    public function logInViaUsernameAndPassword(
-        $email,
-        $password
-    )
+    public function logInViaUsernameAndPassword($email, $password)
     {
+        if (!$this->isValidEmail($email)) {
+            throw new \InvalidArgumentException('Email is invalid');
+        }
         $options = [
             'form_params' => [
                 'email' => $email,
@@ -152,40 +160,27 @@ class Authentication extends TerminusService
         ];
         $this->attemptLoginRequest($options);
 
-        $this->setInstanceData($response['data']);
-        return true;
+        return $this;
     }
 
     /**
-     * Saves the session data to a cookie
-     *
-     * @param \stdClass $data Session data to save
-     * @return bool Always true
+     * @return Response
      */
-    private
-    function setInstanceData(
-        \stdClass $data
-    )
+    public function getResponse()
     {
-        if (!isset($data->machine_token)) {
-            $machine_token = (array)Session::instance()->get('machine_token');
-        } else {
-            $machine_token = $data->machine_token;
-        }
-        $session = [
-            'user_uuid' => $data->user_id,
-            'session' => $data->session,
-            'session_expire_time' => $data->expires_at,
-        ];
-        if ($machine_token && is_string($machine_token)) {
-            $session['machine_token'] = $machine_token;
-        }
-        Session::instance()->setData($session);
-        return true;
+        return $this->response;
     }
 
     /**
-     * @return mixed
+     * @param Response $response
+     */
+    public function setResponse($response)
+    {
+        $this->response = $response;
+    }
+
+    /**
+     * @return Request
      */
     public function getRequest()
     {
@@ -193,7 +188,7 @@ class Authentication extends TerminusService
     }
 
     /**
-     * @param mixed $request
+     * @param Request $request
      */
     public function setRequest($request)
     {
@@ -217,27 +212,52 @@ class Authentication extends TerminusService
      * @param $args
      * @return mixed
      */
-    public function getTokenByEmail($args)
+    public function getTokenByEmail($email)
     {
-        return $this->getContainer()
-            ->get('TokenCache')
-            ->findByEmail($args['email'])['token'];
+        return $this->getTokenCache()
+            ->findByEmail($email)['token'];
     }
 
     /**
-     * @return Session
+     * @return TokensCache
      */
-    public function getSession()
+    public function getTokenCache()
     {
-        return $this->session;
+        return $this->tokenCache;
     }
 
     /**
-     * @param Session $session
+     * @param mixed $tokenCache
+     * @return Authentication
      */
-    public function setSession($session)
+    public function setTokenCache($tokenCache)
     {
-        $this->session = $session;
+        $this->tokenCache = $tokenCache;
+        return $this;
+    }
+
+    /**
+     * @param array $options
+     * @return $this
+     * @throws TerminusException
+     */
+    protected function attemptLoginRequest(array $options = [])
+    {
+        try {
+            $response = $this->request->request(
+                'authorize/machine-token',
+                $options
+            );
+        } catch (\Exception $e) {
+            throw new TerminusException(
+                'The provided credentials are not valid.',
+                [],
+                1
+            );
+        }
+        $this->getSession()->setData($response);
+        $this->setResponse($response);
+        return $this;
     }
 
     /**
@@ -248,6 +268,31 @@ class Authentication extends TerminusService
      */
     private function isValidEmail($email)
     {
-         return !is_bool(filter_var($email, FILTER_VALIDATE_EMAIL));
+        return !is_bool(filter_var($email, FILTER_VALIDATE_EMAIL));
+    }
+
+    /**
+     * Saves the session data to a cookie
+     *
+     * @param \stdClass $data Session data to save
+     * @return bool Always true
+     */
+    private function setInstanceData(\stdClass $data)
+    {
+        if (!isset($data->machine_token)) {
+            $machine_token = (array)Session::instance()->get('machine_token');
+        } else {
+            $machine_token = $data->machine_token;
+        }
+        $session = [
+            'user_uuid' => $data->user_id,
+            'session' => $data->session,
+            'session_expire_time' => $data->expires_at,
+        ];
+        if ($machine_token && is_string($machine_token)) {
+            $session['machine_token'] = $machine_token;
+        }
+        Session::instance()->setData($session);
+        return true;
     }
 }

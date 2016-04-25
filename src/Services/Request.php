@@ -5,16 +5,13 @@ namespace Pantheon\Terminus\Services;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\BadResponseException;
-use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Psr7\Request as HttpRequest;
+use GuzzleHttp\RequestOptions;
 use Interop\Container\ContainerInterface;
-use League\Container\ContainerAwareInterface;
 use Pantheon\Terminus\Exceptions\TerminusException;
 use Pantheon\Terminus\Loggers\Logger;
 use Pantheon\Terminus\Runner;
 use Pantheon\Terminus\Utils;
-use League\Container\ContainerAwareTrait;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -51,8 +48,8 @@ class Request extends TerminusService
     {
         if (file_exists($target)) {
             throw new TerminusException(
-              'Target file {target} already exists.',
-              compact('target')
+                'Target file {target} already exists.',
+                compact('target')
             );
         }
 
@@ -140,19 +137,19 @@ class Request extends TerminusService
     public function request($path, $arg_options = [])
     {
         $default_options = [
-          'method' => 'get',
-          'absolute_url' => false,
+            'method' => 'get',
+            'absolute_url' => false,
         ];
         $options = array_merge($default_options, $arg_options);
 
         $url = $path;
         if ((strpos($path, 'http') !== 0) && !$options['absolute_url']) {
             $url = sprintf(
-              '%s://%s:%s/api/%s',
-              TERMINUS_PROTOCOL,
-              TERMINUS_HOST,
-              TERMINUS_PORT,
-              $path
+                '%s://%s:%s/api/%s',
+                TERMINUS_PROTOCOL,
+                TERMINUS_HOST,
+                TERMINUS_PORT,
+                $path
             );
         }
 
@@ -160,17 +157,13 @@ class Request extends TerminusService
             $response = $this->send($url, $options['method'], $options);
         } catch (BadResponseException $e) {
             throw new TerminusException(
-              'API Request Error: {msg}',
-              ['msg' => $e->getMessage(),],
-              1
+                'API Request Error: {msg}',
+                ['msg' => $e->getMessage(),],
+                1
             );
         }
 
-        return [
-          'data' => json_decode($response->getBody()->getContents()),
-          'headers' => $response->getHeaders(),
-          'status_code' => $response->getStatusCode(),
-        ];
+        return $response;
     }
 
     /**
@@ -185,15 +178,15 @@ class Request extends TerminusService
     private function send($uri, $method, array $arg_params = [])
     {
         $extra_params = [
-          'headers' => [
-            'User-Agent' => $this->userAgent(),
-            'Content-type' => 'application/json',
-          ],
-          RequestOptions::VERIFY => (strpos(TERMINUS_HOST, 'onebox') === false),
+            'headers' => [
+                'User-Agent' => $this->userAgent(),
+                'Content-type' => 'application/json',
+            ],
+            RequestOptions::VERIFY => (strpos(TERMINUS_HOST, 'onebox') === false),
         ];
 
         if ((!isset($arg_params['absolute_url']) || !$arg_params['absolute_url'])
-          && $session = Session::instance()->get('session', false)
+            && $session = Session::instance()->get('session', false)
         ) {
             $extra_params['headers']['Authorization'] = "Bearer $session";
         }
@@ -203,13 +196,13 @@ class Request extends TerminusService
             unset($params['form_params']);
         }
         $params[RequestOptions::VERIFY] = (strpos(TERMINUS_HOST,
-            'onebox') === false);
+                'onebox') === false);
 
         $client = new Client(
-          [
-            'base_uri' => $this->getBaseUri(),
-            'cookies' => $this->fillCookieJar($params),
-          ]
+            [
+                'base_uri' => $this->getBaseUri(),
+                'cookies' => $this->fillCookieJar($params),
+            ]
         );
         unset($params['cookies']);
 
@@ -251,10 +244,10 @@ class Request extends TerminusService
     private function getBaseUri()
     {
         $base_uri = sprintf(
-          '%s://%s:%s',
-          TERMINUS_PROTOCOL,
-          TERMINUS_HOST,
-          TERMINUS_PORT
+            '%s://%s:%s',
+            TERMINUS_PROTOCOL,
+            TERMINUS_HOST,
+            TERMINUS_PORT
         );
         return $base_uri;
     }
@@ -267,10 +260,10 @@ class Request extends TerminusService
     private function userAgent()
     {
         $agent = sprintf(
-          'Terminus/%s (php_version=%s&script=%s)',
-          constant('TERMINUS_VERSION'),
-          phpversion(),
-          constant('TERMINUS_SCRIPT')
+            'Terminus/%s (php_version=%s&script=%s)',
+            constant('TERMINUS_VERSION'),
+            phpversion(),
+            constant('TERMINUS_SCRIPT')
         );
         return $agent;
     }

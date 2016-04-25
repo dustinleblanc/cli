@@ -2,6 +2,7 @@
 
 namespace Pantheon\Terminus\Services;
 
+use Pantheon\Terminus\Config\Config;
 use Pantheon\Terminus\Services\Caches\FileCache;
 use Pantheon\Terminus\Models\User;
 
@@ -26,8 +27,7 @@ class Session extends TerminusService
         parent::__construct();
         $this->cache = $this->getContainer()->get('FileCache');
         $this->data = $this->getCache()->getData('session') ?: new \stdClass();
-        $this->setExpireTime($this->data['session_expire_time']);
-        self::$instance = $this;
+        $this->setExpireTime($this->data->expires_at);self::$instance = $this;
     }
 
     /**
@@ -96,21 +96,18 @@ class Session extends TerminusService
      * Saves session data to cache
      *
      * @param array $data Session data to save
-     * @return void|bool
+     * @return $this
      */
-    public static function setData($data)
+    public function setData($data)
     {
         if (empty($data)) {
-            return false;
+            return $this;
         }
-        $cache = new FileCache();
-        $cache->putData('session', $data);
-        $session = self::instance();
-        $session->set('data', $data);
+        $this->getCache()->putData('session', $data);
         foreach ($data as $k => $v) {
-            $session->set($k, $v);
+            $this->set($k, $v);
         }
-        return true;
+        return $this;
     }
 
     /**
