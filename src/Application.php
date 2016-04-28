@@ -42,6 +42,7 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
         if ($container != null) {
             Config::setContainer($container);
         }
+        $this->addCommands($this->getAllCommands());
     }
 
     /**
