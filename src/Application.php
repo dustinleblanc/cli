@@ -28,7 +28,8 @@ class Application extends SymfonyApplication implements ContainerAwareInterface
      * Application constructor.
      * @param string $name
      * @param string $version
-     * @param $workingDir
+     * @param string $workingDir
+     * @param \League\Container\ContainerInterface $container
      */
     public function __construct(
         $name = '',

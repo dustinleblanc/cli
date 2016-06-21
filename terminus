@@ -10,8 +10,6 @@ require __DIR__ . '/vendor/autoload.php';
 $serviceProvider = new TerminusServiceProvider();
 $container = new TerminusContainer();
 $container->addServiceProvider($serviceProvider);
-
+Config::setContainer($container);
 $app = new Application('Terminus', 'Yolo', __DIR__);
-$config = new Config();
-$config->setContainer($container);
 $app->run();
