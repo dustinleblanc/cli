@@ -27,7 +27,10 @@ class Session extends TerminusService
         parent::__construct();
         $this->cache = $this->getContainer()->get('FileCache');
         $this->data = $this->getCache()->getData('session') ?: new \stdClass();
-        $this->setExpireTime($this->data->expires_at);self::$instance = $this;
+        if (property_exists($this->data, 'expires_at')) {
+            $this->setExpireTime($this->data->expires_at);
+        }
+        self::$instance = $this;
     }
 
     /**
